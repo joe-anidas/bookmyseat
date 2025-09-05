@@ -1,8 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 
 const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvailableBuses, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, navigate }) => {
+  const [loading, setLoading] = useState(false);
+  const [bookedSeatsFromServer, setBookedSeatsFromServer] = useState([]);
+  const [fetchError, setFetchError] = useState('');
+
   useEffect(() => {
     const savedSearchData = localStorage.getItem('searchData');
     const savedBuses = localStorage.getItem('availableBuses');
@@ -13,6 +17,70 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
     const savedSelectedSeats = localStorage.getItem('selectedSeats');
     if (savedSelectedSeats) setSelectedSeats(JSON.parse(savedSelectedSeats));
   }, []);
+
+  // Fetch booked seats from server
+  const fetchBookedSeats = async () => {
+    if (!selectedBus || !searchData) return;
+    
+    setLoading(true);
+    setFetchError('');
+    try {
+      const route = `${searchData.from} → ${searchData.to}`;
+      const response = await fetch(
+        `http://localhost:5001/api/booked-seats?bus=${encodeURIComponent(selectedBus.name)}&route=${encodeURIComponent(route)}&date=${encodeURIComponent(searchData.date)}`
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setBookedSeatsFromServer(result.data.bookedSeats);
+          
+          // Update the selected bus seats to reflect booked seats from server
+          const updatedBus = { ...selectedBus };
+          updatedBus.seats = updatedBus.seats.map(seat => {
+            if (result.data.bookedSeats.includes(seat.number)) {
+              return { ...seat, status: 'booked' };
+            }
+            // If seat was previously marked as booked but not in server data, mark as available
+            else if (seat.status === 'booked' && seat.type !== 'driver') {
+              return { ...seat, status: 'available' };
+            }
+            return seat;
+          });
+          
+          setSelectedBus(updatedBus);
+          
+          // Update available buses list as well
+          const updatedBuses = availableBuses.map(bus => 
+            bus.id === selectedBus.id ? updatedBus : bus
+          );
+          setAvailableBuses(updatedBuses);
+          
+          // Save updated data to localStorage
+          localStorage.setItem('selectedBus', JSON.stringify(updatedBus));
+          localStorage.setItem('availableBuses', JSON.stringify(updatedBuses));
+        } else {
+          setFetchError('Failed to fetch seat availability');
+        }
+      } else {
+        setFetchError('Unable to connect to server. Showing cached seat data.');
+        console.error('Failed to fetch booked seats:', response.statusText);
+      }
+    } catch (error) {
+      setFetchError('Network error. Showing cached seat data.');
+      console.error('Error fetching booked seats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch booked seats when component mounts and when selectedBus changes
+  useEffect(() => {
+    if (selectedBus && searchData) {
+      fetchBookedSeats();
+    }
+  }, [selectedBus?.id, searchData?.date, searchData?.from, searchData?.to]);
+
   if (!selectedBus) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -58,7 +126,24 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Select Your Seats</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">Select Your Seats</h3>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={fetchBookedSeats}
+                    disabled={loading}
+                    className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Refresh
+                  </button>
+                  {loading && (
+                    <div className="flex items-center space-x-2 text-blue-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span className="text-sm">Fetching latest seat availability...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="flex space-x-6 mb-6 text-sm">
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-green-500 rounded"></div><span>Available</span></div>
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-red-500 rounded"></div><span>Booked</span></div>
@@ -66,6 +151,22 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-blue-500 rounded"></div><span>Selected</span></div>
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-gray-500 rounded"></div><span>Driver</span></div>
               </div>
+              
+              {fetchError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">
+                    <strong>Warning:</strong> {fetchError}
+                  </p>
+                </div>
+              )}
+              
+              {bookedSeatsFromServer.length > 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> Seats {bookedSeatsFromServer.join(', ')} are already booked by other passengers.
+                  </p>
+                </div>
+              )}
               
               {/* Bus Layout */}
               <div className="bg-gray-100 rounded-xl p-6 max-w-md mx-auto">

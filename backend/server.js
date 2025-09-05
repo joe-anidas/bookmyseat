@@ -350,6 +350,67 @@ app.delete('/api/bookings/:id', async (req, res) => {
   }
 });
 
+// GET route to fetch booked seats for a specific bus, route, and date
+app.get('/api/booked-seats', async (req, res) => {
+  try {
+    const { bus, route, date } = req.query;
+    
+    // Validate required parameters
+    if (!bus || !route || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required parameters: bus, route, and date are required',
+        received: { bus, route, date }
+      });
+    }
+
+    // Find all confirmed bookings for the specified bus, route, and date
+    const bookings = await Booking.find({
+      bus: bus,
+      route: route,
+      date: date,
+      status: 'Confirmed'
+    });
+
+    // Extract booked seat numbers from all bookings
+    const bookedSeats = [];
+    bookings.forEach(booking => {
+      if (booking.seats && Array.isArray(booking.seats)) {
+        bookedSeats.push(...booking.seats);
+      }
+    });
+
+    // Remove duplicates and sort
+    const uniqueBookedSeats = [...new Set(bookedSeats)].sort((a, b) => {
+      // Sort numerically if both are numbers, otherwise sort alphabetically
+      if (!isNaN(a) && !isNaN(b)) {
+        return parseInt(a) - parseInt(b);
+      }
+      return a.toString().localeCompare(b.toString());
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Booked seats fetched successfully',
+      data: {
+        bus,
+        route,
+        date,
+        bookedSeats: uniqueBookedSeats,
+        totalBookedSeats: uniqueBookedSeats.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching booked seats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

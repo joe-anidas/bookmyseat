@@ -132,7 +132,6 @@ const AppContent = () => {
     ];
 
     const buses = predefinedBuses.map(busData => {
-      // Generate seats - 1 driver seat + 40 passenger seats (10 rows of 4)
       const seats = [];
       
       // Driver seat (top right)
@@ -144,22 +143,105 @@ const AppContent = () => {
         position: 'driver'
       });
       
-      // Passenger seats - 10 rows of 4 seats each (2-2 layout)
-      for (let row = 1; row <= 10; row++) {
-        for (let seatInRow = 1; seatInRow <= 4; seatInRow++) {
-          const seatNumber = (row - 1) * 4 + seatInRow;
-          // Make seats initially available - server will determine actual booked seats
-          const status = 'available';
-          // Set some seats as ladies seats (first 2 rows, some seats)
-          const seatType = (row <= 2 && (seatNumber === 1 || seatNumber === 2 || seatNumber === 5 || seatNumber === 6)) ? 'ladies' : 'regular';
-          
+      // Different seat layouts for sleeper vs seater buses
+      if (busData.type.includes('Sleeper')) {
+        // Sleeper layout: 1+2 configuration with upper/lower berths, 5 rows
+        // Total seats: 30 (5 rows × 6 berths per row)
+        for (let row = 1; row <= 5; row++) {
+          // Left side: 1 berth (upper and lower)
+          // Upper berth
+          const leftUpperNumber = (row - 1) * 6 + 1;
           seats.push({
-            number: seatNumber,
-            status,
-            type: seatType,
+            number: leftUpperNumber,
+            status: 'available',
+            type: (row <= 2 && leftUpperNumber <= 2) ? 'ladies' : 'regular',
             row: row,
-            position: seatInRow <= 2 ? 'left' : 'right' // seats 1,2 are left side, 3,4 are right side
+            position: 'left',
+            berth: 'upper',
+            berthPosition: 'single'
           });
+          
+          // Lower berth
+          const leftLowerNumber = (row - 1) * 6 + 2;
+          seats.push({
+            number: leftLowerNumber,
+            status: 'available',
+            type: (row <= 2 && leftLowerNumber <= 4) ? 'ladies' : 'regular',
+            row: row,
+            position: 'left',
+            berth: 'lower',
+            berthPosition: 'single'
+          });
+          
+          // Right side: 2 berths (upper and lower each)
+          // First right berth - upper
+          const rightFirstUpperNumber = (row - 1) * 6 + 3;
+          seats.push({
+            number: rightFirstUpperNumber,
+            status: 'available',
+            type: 'regular',
+            row: row,
+            position: 'right',
+            berth: 'upper',
+            berthPosition: 'first'
+          });
+          
+          // First right berth - lower
+          const rightFirstLowerNumber = (row - 1) * 6 + 4;
+          seats.push({
+            number: rightFirstLowerNumber,
+            status: 'available',
+            type: 'regular',
+            row: row,
+            position: 'right',
+            berth: 'lower',
+            berthPosition: 'first'
+          });
+          
+          // Second right berth - upper
+          const rightSecondUpperNumber = (row - 1) * 6 + 5;
+          seats.push({
+            number: rightSecondUpperNumber,
+            status: 'available',
+            type: 'regular',
+            row: row,
+            position: 'right',
+            berth: 'upper',
+            berthPosition: 'second'
+          });
+          
+          // Second right berth - lower
+          const rightSecondLowerNumber = (row - 1) * 6 + 6;
+          seats.push({
+            number: rightSecondLowerNumber,
+            status: 'available',
+            type: 'regular',
+            row: row,
+            position: 'right',
+            berth: 'lower',
+            berthPosition: 'second'
+          });
+        }
+      } else {
+        // Seater layout: 2+2 configuration, 10 rows (original layout)
+        // Total seats: 40 (10 rows × 4 seats per row)
+        for (let row = 1; row <= 10; row++) {
+          for (let seatInRow = 1; seatInRow <= 4; seatInRow++) {
+            const seatNumber = (row - 1) * 4 + seatInRow;
+            // Make seats initially available - server will determine actual booked seats
+            const status = 'available';
+            // Set some seats as ladies seats (first 2 rows, some seats)
+            const seatType = (row <= 2 && (seatNumber === 1 || seatNumber === 2 || seatNumber === 5 || seatNumber === 6)) ? 'ladies' : 'regular';
+            
+            seats.push({
+              number: seatNumber,
+              status,
+              type: seatType,
+              row: row,
+              position: seatInRow <= 2 ? 'left' : 'right', // seats 1,2 are left side, 3,4 are right side
+              berth: 'none' // Not applicable for seater buses
+            });
+          }
         }
       }
       

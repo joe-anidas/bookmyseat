@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
-
 const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvailableBuses, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, navigate }) => {
   const [loading, setLoading] = useState(false);
   const [bookedSeatsFromServer, setBookedSeatsFromServer] = useState([]);
@@ -92,6 +91,7 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
       </div>
     );
   }
+
   const toggleSeat = (seatNumber) => {
     const seat = selectedBus.seats.find(s => s.number === seatNumber);
     if (seat.status !== 'available' || seat.type === 'driver') return;
@@ -106,7 +106,9 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
     setSelectedSeats(newSelectedSeats);
     localStorage.setItem('selectedSeats', JSON.stringify(newSelectedSeats));
   };
+
   const totalPrice = selectedSeats.length * selectedBus.price;
+
   return (
     <div className="min-h-screen bg-gray-50 seat-selection-page">
       <header className="bg-white shadow-sm border-b p-4">
@@ -182,82 +184,198 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
                   </div>
                 </div>
                 
-                {/* Passenger Seats - 10 rows */}
-                <div className="space-y-3">
-                  {[...Array(10)].map((_, rowIndex) => {
-                    const rowNumber = rowIndex + 1;
-                    const rowSeats = selectedBus.seats.filter(seat => seat.row === rowNumber);
-                    const leftSeats = rowSeats.filter(seat => seat.position === 'left');
-                    const rightSeats = rowSeats.filter(seat => seat.position === 'right');
-                    
-                    return (
-                      <div key={rowNumber} className="flex justify-between items-center">
-                        {/* Left side seats (2 seats) */}
-                        <div className="flex space-x-1">
-                          {leftSeats.map((seat) => {
-                            const isSelected = selectedSeats.includes(seat.number);
-                            let seatClass = 'w-10 h-10 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
+                {/* Passenger Seats */}
+                {selectedBus.type.includes('Sleeper') ? (
+                  /* Sleeper Layout - 1+2 configuration with upper/lower berths, 5 rows */
+                  <div className="space-y-4">
+                    <div className="text-xs text-gray-600 text-center mb-2">Upper (U) / Lower (L) Berths</div>
+                    {[...Array(5)].map((_, rowIndex) => {
+                      const rowNumber = rowIndex + 1;
+                      const rowSeats = selectedBus.seats.filter(seat => seat.row === rowNumber);
+                      const leftSeats = rowSeats.filter(seat => seat.position === 'left');
+                      const rightSeats = rowSeats.filter(seat => seat.position === 'right');
+                      
+                      return (
+                        <div key={rowNumber} className="flex justify-between items-center">
+                          {/* Left side - Single berth (upper and lower) */}
+                          <div className="flex flex-col space-y-1">
+                            {leftSeats.map((seat) => {
+                              const isSelected = selectedSeats.includes(seat.number);
+                              let seatClass = 'w-12 h-6 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
+                              
+                              if (seat.status === 'booked') {
+                                seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
+                              } else if (seat.type === 'ladies') {
+                                seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
+                              } else if (isSelected) {
+                                seatClass += 'bg-blue-500 text-white border-blue-500';
+                              } else {
+                                seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
+                              }
+                              
+                              return (
+                                <button 
+                                  key={seat.number} 
+                                  className={seatClass} 
+                                  onClick={() => toggleSeat(seat.number)} 
+                                  disabled={seat.status === 'booked'}
+                                  title={`${seat.berth} berth`}
+                                >
+                                  {seat.number}{seat.berth === 'upper' ? 'U' : 'L'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Row number */}
+                          <div className="w-6 flex justify-center">
+                            <div className="text-xs text-gray-400">{rowNumber}</div>
+                          </div>
+                          
+                          {/* Right side - Two berths (upper and lower each) */}
+                          <div className="flex space-x-2">
+                            {/* First right berth */}
+                            <div className="flex flex-col space-y-1">
+                              {rightSeats.filter(seat => seat.berthPosition === 'first').map((seat) => {
+                                const isSelected = selectedSeats.includes(seat.number);
+                                let seatClass = 'w-12 h-6 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
+                                
+                                if (seat.status === 'booked') {
+                                  seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
+                                } else if (seat.type === 'ladies') {
+                                  seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
+                                } else if (isSelected) {
+                                  seatClass += 'bg-blue-500 text-white border-blue-500';
+                                } else {
+                                  seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
+                                }
+                                
+                                return (
+                                  <button 
+                                    key={seat.number} 
+                                    className={seatClass} 
+                                    onClick={() => toggleSeat(seat.number)} 
+                                    disabled={seat.status === 'booked'}
+                                    title={`${seat.berth} berth`}
+                                  >
+                                    {seat.number}{seat.berth === 'upper' ? 'U' : 'L'}
+                                  </button>
+                                );
+                              })}
+                            </div>
                             
-                            if (seat.status === 'booked') {
-                              seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
-                            } else if (seat.type === 'ladies') {
-                              seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
-                            } else if (isSelected) {
-                              seatClass += 'bg-blue-500 text-white border-blue-500';
-                            } else {
-                              seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
-                            }
-                            
-                            return (
-                              <button 
-                                key={seat.number} 
-                                className={seatClass} 
-                                onClick={() => toggleSeat(seat.number)} 
-                                disabled={seat.status === 'booked'}
-                              >
-                                {seat.number}
-                              </button>
-                            );
-                          })}
+                            {/* Second right berth */}
+                            <div className="flex flex-col space-y-1">
+                              {rightSeats.filter(seat => seat.berthPosition === 'second').map((seat) => {
+                                const isSelected = selectedSeats.includes(seat.number);
+                                let seatClass = 'w-12 h-6 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
+                                
+                                if (seat.status === 'booked') {
+                                  seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
+                                } else if (seat.type === 'ladies') {
+                                  seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
+                                } else if (isSelected) {
+                                  seatClass += 'bg-blue-500 text-white border-blue-500';
+                                } else {
+                                  seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
+                                }
+                                
+                                return (
+                                  <button 
+                                    key={seat.number} 
+                                    className={seatClass} 
+                                    onClick={() => toggleSeat(seat.number)} 
+                                    disabled={seat.status === 'booked'}
+                                    title={`${seat.berth} berth`}
+                                  >
+                                    {seat.number}{seat.berth === 'upper' ? 'U' : 'L'}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
-                        
-                        {/* Aisle gap */}
-                        <div className="w-4 flex justify-center">
-                          <div className="text-xs text-gray-400">{rowNumber}</div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Seater Layout - 2+2 configuration, 10 rows */
+                  <div className="space-y-3">
+                    {[...Array(10)].map((_, rowIndex) => {
+                      const rowNumber = rowIndex + 1;
+                      const rowSeats = selectedBus.seats.filter(seat => seat.row === rowNumber);
+                      const leftSeats = rowSeats.filter(seat => seat.position === 'left');
+                      const rightSeats = rowSeats.filter(seat => seat.position === 'right');
+                      
+                      return (
+                        <div key={rowNumber} className="flex justify-between items-center">
+                          {/* Left side seats (2 seats) */}
+                          <div className="flex space-x-1">
+                            {leftSeats.map((seat) => {
+                              const isSelected = selectedSeats.includes(seat.number);
+                              let seatClass = 'w-10 h-10 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
+                              
+                              if (seat.status === 'booked') {
+                                seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
+                              } else if (seat.type === 'ladies') {
+                                seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
+                              } else if (isSelected) {
+                                seatClass += 'bg-blue-500 text-white border-blue-500';
+                              } else {
+                                seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
+                              }
+                              
+                              return (
+                                <button 
+                                  key={seat.number} 
+                                  className={seatClass} 
+                                  onClick={() => toggleSeat(seat.number)} 
+                                  disabled={seat.status === 'booked'}
+                                >
+                                  {seat.number}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Aisle gap */}
+                          <div className="w-4 flex justify-center">
+                            <div className="text-xs text-gray-400">{rowNumber}</div>
+                          </div>
+                          
+                          {/* Right side seats (2 seats) */}
+                          <div className="flex space-x-1">
+                            {rightSeats.map((seat) => {
+                              const isSelected = selectedSeats.includes(seat.number);
+                              let seatClass = 'w-10 h-10 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
+                              
+                              if (seat.status === 'booked') {
+                                seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
+                              } else if (seat.type === 'ladies') {
+                                seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
+                              } else if (isSelected) {
+                                seatClass += 'bg-blue-500 text-white border-blue-500';
+                              } else {
+                                seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
+                              }
+                              
+                              return (
+                                <button 
+                                  key={seat.number} 
+                                  className={seatClass} 
+                                  onClick={() => toggleSeat(seat.number)} 
+                                  disabled={seat.status === 'booked'}
+                                >
+                                  {seat.number}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                        
-                        {/* Right side seats (2 seats) */}
-                        <div className="flex space-x-1">
-                          {rightSeats.map((seat) => {
-                            const isSelected = selectedSeats.includes(seat.number);
-                            let seatClass = 'w-10 h-10 rounded border-2 flex items-center justify-center text-xs font-medium cursor-pointer transition-all ';
-                            
-                            if (seat.status === 'booked') {
-                              seatClass += 'bg-red-500 text-white border-red-500 cursor-not-allowed';
-                            } else if (seat.type === 'ladies') {
-                              seatClass += isSelected ? 'bg-blue-500 text-white border-blue-500' : 'bg-pink-200 text-pink-800 border-pink-300 hover:bg-pink-300';
-                            } else if (isSelected) {
-                              seatClass += 'bg-blue-500 text-white border-blue-500';
-                            } else {
-                              seatClass += 'bg-green-200 text-green-800 border-green-300 hover:bg-green-300';
-                            }
-                            
-                            return (
-                              <button 
-                                key={seat.number} 
-                                className={seatClass} 
-                                onClick={() => toggleSeat(seat.number)} 
-                                disabled={seat.status === 'booked'}
-                              >
-                                {seat.number}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

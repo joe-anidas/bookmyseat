@@ -2,44 +2,107 @@ import React, { useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 
-const PaymentPage = ({ searchData, setSearchData, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, passengerDetails, setPassengerDetails, bookingHistory, setBookingHistory, navigate }) => {
+const PaymentPage = ({ searchData, setSearchData, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, selectedBoardingPoint, setSelectedBoardingPoint, selectedDroppingPoint, setSelectedDroppingPoint, passengerDetails, setPassengerDetails, bookingHistory, setBookingHistory, navigate }) => {
   useEffect(() => {
     const savedSearchData = localStorage.getItem('searchData');
     const savedSelectedBus = localStorage.getItem('selectedBus');
+    const savedSelectedSeats = localStorage.getItem('selectedSeats');
+    const savedBoardingPoint = localStorage.getItem('selectedBoardingPoint');
+    const savedDroppingPoint = localStorage.getItem('selectedDroppingPoint');
     const savedPassengerDetails = localStorage.getItem('passengerDetails');
+    
     if (savedSearchData) setSearchData(JSON.parse(savedSearchData));
     if (savedSelectedBus) setSelectedBus(JSON.parse(savedSelectedBus));
-    if (savedPassengerDetails) setPassengerDetails(JSON.parse(savedPassengerDetails));
-    const savedSelectedSeats = localStorage.getItem('selectedSeats');
     if (savedSelectedSeats) setSelectedSeats(JSON.parse(savedSelectedSeats));
+    if (savedBoardingPoint) setSelectedBoardingPoint(savedBoardingPoint);
+    if (savedDroppingPoint) setSelectedDroppingPoint(savedDroppingPoint);
+    if (savedPassengerDetails) setPassengerDetails(JSON.parse(savedPassengerDetails));
   }, []);
   const totalPrice = selectedSeats.length * (selectedBus?.price || 0);
   const serviceTax = Math.round(totalPrice * 0.05);
   const finalAmount = totalPrice + serviceTax;
-  const handlePayment = () => {
-    setTimeout(() => {
-      const booking = {
-        id: Date.now(),
+  const handlePayment = async () => {
+    try {
+      console.log('Starting payment process...');
+      
+      // Generate transaction ID
+      const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Prepare booking data for API
+      const bookingData = {
+        id: Date.now().toString(),
         bus: selectedBus.name,
         route: `${searchData.from} → ${searchData.to}`,
         date: searchData.date,
         time: selectedBus.departureTime,
         seats: [...selectedSeats],
-        passengers: selectedSeats.length,
+        passengers: passengerDetails,
+        boardingPoint: selectedBoardingPoint || 'bp1',
+        droppingPoint: selectedDroppingPoint || 'dp1',
         amount: finalAmount,
         status: 'Confirmed',
-        bookingDate: new Date().toISOString().split('T')[0]
+        bookingDate: new Date().toISOString().split('T')[0],
+        paymentDetails: {
+          method: 'Card',
+          transactionId
+        }
       };
-      setBookingHistory([...bookingHistory, booking]);
-      localStorage.removeItem('searchData');
-      localStorage.removeItem('availableBuses');
-      localStorage.removeItem('selectedBus');
-      localStorage.removeItem('selectedSeats');
-      localStorage.removeItem('selectedBoardingPoint');
-      localStorage.removeItem('selectedDroppingPoint');
-      localStorage.removeItem('passengerDetails');
-      navigate('/success');
-    }, 2000);
+
+      console.log('Booking data to be sent:', bookingData);
+
+      // Send booking data to backend
+      console.log('Sending request to backend...');
+      const response = await fetch('http://localhost:5001/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData)
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      const result = await response.json();
+      console.log('Response data:', result);
+
+      if (response.ok && result.success) {
+        console.log('Booking successful!');
+        
+        // Create booking object for local state (backward compatibility)
+        const booking = {
+          id: bookingData.id,
+          bus: selectedBus.name,
+          route: `${searchData.from} → ${searchData.to}`,
+          date: searchData.date,
+          time: selectedBus.departureTime,
+          seats: [...selectedSeats],
+          passengers: selectedSeats.length,
+          amount: finalAmount,
+          status: 'Confirmed',
+          bookingDate: new Date().toISOString().split('T')[0]
+        };
+        
+        setBookingHistory([...bookingHistory, booking]);
+        
+        // Clear localStorage
+        localStorage.removeItem('searchData');
+        localStorage.removeItem('availableBuses');
+        localStorage.removeItem('selectedBus');
+        localStorage.removeItem('selectedSeats');
+        localStorage.removeItem('selectedBoardingPoint');
+        localStorage.removeItem('selectedDroppingPoint');
+        localStorage.removeItem('passengerDetails');
+        
+        navigate('/success');
+      } else {
+        console.error('Booking failed:', result);
+        alert('Booking failed: ' + (result.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      alert('Booking failed. Please check console for details and try again.');
+    }
   };
   return (
     <div className="min-h-screen bg-gray-50 payment-page">

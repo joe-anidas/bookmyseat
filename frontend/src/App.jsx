@@ -197,6 +197,10 @@ const AppContent = () => {
               setSelectedBus={setSelectedBus}
               selectedSeats={selectedSeats}
               setSelectedSeats={setSelectedSeats}
+              selectedBoardingPoint={selectedBoardingPoint}
+              setSelectedBoardingPoint={setSelectedBoardingPoint}
+              selectedDroppingPoint={selectedDroppingPoint}
+              setSelectedDroppingPoint={setSelectedDroppingPoint}
               passengerDetails={passengerDetails}
               setPassengerDetails={setPassengerDetails}
               bookingHistory={bookingHistory}

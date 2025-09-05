@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { API_ENDPOINTS } from '../config/api';
 
 const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvailableBuses, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, navigate }) => {
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,7 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
     try {
       const route = `${searchData.from} → ${searchData.to}`;
       const response = await fetch(
-        `http://localhost:5001/api/booked-seats?bus=${encodeURIComponent(selectedBus.name)}&route=${encodeURIComponent(route)}&date=${encodeURIComponent(searchData.date)}`
+        `${API_ENDPOINTS.BOOKED_SEATS}?bus=${encodeURIComponent(selectedBus.name)}&route=${encodeURIComponent(route)}&date=${encodeURIComponent(searchData.date)}`
       );
       
       if (response.ok) {

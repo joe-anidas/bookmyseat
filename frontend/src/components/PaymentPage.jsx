@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
-
+import { API_ENDPOINTS } from '../config/api';
 
 const PaymentPage = ({ searchData, setSearchData, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, selectedBoardingPoint, setSelectedBoardingPoint, selectedDroppingPoint, setSelectedDroppingPoint, passengerDetails, setPassengerDetails, bookingHistory, setBookingHistory, navigate }) => {
   useEffect(() => {
@@ -52,7 +52,7 @@ const PaymentPage = ({ searchData, setSearchData, selectedBus, setSelectedBus, s
 
       // Send booking data to backend
       console.log('Sending request to backend...');
-      const response = await fetch('http://localhost:5001/api/bookings', {
+      const response = await fetch(API_ENDPOINTS.BOOKINGS, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

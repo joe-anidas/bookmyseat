@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bus, ArrowLeft, RefreshCw } from 'lucide-react';
-
+import { API_ENDPOINTS } from '../config/api';
 
 const HistoryPage = ({ bookingHistory, navigate }) => {
   const [serverBookings, setServerBookings] = useState([]);
@@ -12,7 +12,7 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:5001/api/bookings');
+      const response = await fetch(API_ENDPOINTS.BOOKINGS);
       const result = await response.json();
       
       if (result.success) {

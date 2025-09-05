@@ -47,16 +47,91 @@ const AppContent = () => {
   
   // Generate buses function
   const generateBuses = (from, to) => {
-    const busTypes = ['AC Sleeper', 'Non-AC Sleeper', 'AC Seater', 'Non-AC Seater'];
-    const companies = ['KPN Travels', 'SRS Travels', 'VRL Travels', 'Orange Tours'];
-    const buses = [];
-    
-    for (let i = 0; i < 8; i++) {
-      const type = busTypes[Math.floor(Math.random() * busTypes.length)];
-      const company = companies[Math.floor(Math.random() * companies.length)];
-      const basePrice = type.includes('AC') ? 800 : 500;
-      const price = basePrice + Math.floor(Math.random() * 300);
-      
+    // Predefined bus data with constant values
+    const predefinedBuses = [
+      {
+        id: 1,
+        name: 'KPN Travels AC Sleeper',
+        type: 'AC Sleeper',
+        price: 950,
+        rating: '4.2',
+        departureTime: '6:00',
+        arrivalTime: '12:30',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 2,
+        name: 'SRS Travels Non-AC Sleeper',
+        type: 'Non-AC Sleeper',
+        price: 650,
+        rating: '4.0',
+        departureTime: '7:30',
+        arrivalTime: '14:00',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 3,
+        name: 'VRL Travels AC Seater',
+        type: 'AC Seater',
+        price: 750,
+        rating: '4.3',
+        departureTime: '8:00',
+        arrivalTime: '14:30',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 4,
+        name: 'Orange Tours Non-AC Seater',
+        type: 'Non-AC Seater',
+        price: 450,
+        rating: '3.8',
+        departureTime: '9:15',
+        arrivalTime: '15:45',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 5,
+        name: 'KPN Travels Non-AC Seater',
+        type: 'Non-AC Seater',
+        price: 500,
+        rating: '4.1',
+        departureTime: '10:00',
+        arrivalTime: '16:30',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 6,
+        name: 'SRS Travels AC Sleeper',
+        type: 'AC Sleeper',
+        price: 1050,
+        rating: '4.4',
+        departureTime: '11:30',
+        arrivalTime: '18:00',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 7,
+        name: 'VRL Travels Non-AC Sleeper',
+        type: 'Non-AC Sleeper',
+        price: 700,
+        rating: '4.0',
+        departureTime: '13:00',
+        arrivalTime: '19:30',
+        travelHours: '6h 30m'
+      },
+      {
+        id: 8,
+        name: 'Orange Tours AC Seater',
+        type: 'AC Seater',
+        price: 800,
+        rating: '3.9',
+        departureTime: '14:45',
+        arrivalTime: '21:15',
+        travelHours: '6h 30m'
+      }
+    ];
+
+    const buses = predefinedBuses.map(busData => {
       // Generate seats - 1 driver seat + 40 passenger seats (10 rows of 4)
       const seats = [];
       
@@ -73,8 +148,10 @@ const AppContent = () => {
       for (let row = 1; row <= 10; row++) {
         for (let seatInRow = 1; seatInRow <= 4; seatInRow++) {
           const seatNumber = (row - 1) * 4 + seatInRow;
-          const status = Math.random() > 0.7 ? 'booked' : 'available';
-          const seatType = row <= 2 && Math.random() > 0.7 ? 'ladies' : 'regular';
+          // Make seats initially available - server will determine actual booked seats
+          const status = 'available';
+          // Set some seats as ladies seats (first 2 rows, some seats)
+          const seatType = (row <= 2 && (seatNumber === 1 || seatNumber === 2 || seatNumber === 5 || seatNumber === 6)) ? 'ladies' : 'regular';
           
           seats.push({
             number: seatNumber,
@@ -86,18 +163,11 @@ const AppContent = () => {
         }
       }
       
-      buses.push({
-        id: i + 1,
-        name: `${company} ${type}`,
-        type,
-        price,
-        rating: (3.5 + Math.random() * 1.5).toFixed(1),
-        departureTime: `${6 + i}:${Math.random() > 0.5 ? '00' : '30'}`,
-        arrivalTime: `${12 + i}:${Math.random() > 0.5 ? '00' : '30'}`,
-        travelHours: `${5 + Math.floor(Math.random() * 3)}h ${Math.floor(Math.random() * 60)}m`,
+      return {
+        ...busData,
         seats
-      });
-    }
+      };
+    });
     
     return buses;
   };

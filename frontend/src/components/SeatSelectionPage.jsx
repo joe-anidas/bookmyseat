@@ -77,12 +77,20 @@ const SeatSelectionPage = ({ searchData, setSearchData, availableBuses, setAvail
               <div className="mb-4">
                 <h3 className="text-xl font-semibold">Select Your Seats</h3>
               </div>
-              <div className="flex space-x-6 mb-6 text-sm">
+              <div className="flex space-x-6 mb-4 text-sm">
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-green-500 rounded"></div><span>Available</span></div>
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-red-500 rounded"></div><span>Booked</span></div>
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-pink-500 rounded"></div><span>Ladies</span></div>
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-blue-500 rounded"></div><span>Selected</span></div>
                 <div className="flex items-center space-x-2"><div className="w-4 h-4 bg-gray-500 rounded"></div><span>Driver</span></div>
+              </div>
+              
+              {/* Ladies seat notice */}
+              <div className="mb-6 p-3 bg-pink-50 border border-pink-200 rounded-lg">
+                <p className="text-sm text-pink-800">
+                  <strong>Note:</strong> Pink colored seats are ladies seats and can only be booked by female passengers. 
+                  Gender validation will be done during passenger details entry.
+                </p>
               </div>
               
               {/* Bus Layout */}

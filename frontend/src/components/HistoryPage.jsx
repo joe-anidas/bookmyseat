@@ -9,6 +9,7 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
   const [searchDate, setSearchDate] = useState('');
   const [searchPhone, setSearchPhone] = useState('');
   const [filteredBookings, setFilteredBookings] = useState([]);
+  const [showAllBookings, setShowAllBookings] = useState(false);
 
   // Fetch bookings from server
   const fetchBookings = async () => {
@@ -116,11 +117,17 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
     setSearchDate('');
     setSearchPhone('');
     setError('');
+    setShowAllBookings(false); // Reset to show only 3 bookings initially
     fetchBookings(); // Reload all bookings
   };
 
   // Use filtered bookings for display
   const displayBookings = searchDate || searchPhone ? filteredBookings : allBookings;
+  
+  // Show only last 3 bookings initially unless searching or showing all
+  const bookingsToShow = (searchDate || searchPhone || showAllBookings) 
+    ? displayBookings 
+    : displayBookings.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-50 history-page">
@@ -194,8 +201,20 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
           </div>
         </div>
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold">Booking History</h3>
-       
+          <div>
+            <h3 className="text-2xl font-bold">Booking History</h3>
+            {displayBookings.length > 0 && (
+              <p className="text-sm text-gray-600 mt-1">
+                {(searchDate || searchPhone) ? (
+                  `${displayBookings.length} booking${displayBookings.length !== 1 ? 's' : ''} found`
+                ) : showAllBookings ? (
+                  `Showing all ${displayBookings.length} booking${displayBookings.length !== 1 ? 's' : ''}`
+                ) : (
+                  `Showing ${Math.min(3, displayBookings.length)} of ${displayBookings.length} booking${displayBookings.length !== 1 ? 's' : ''}`
+                )}
+              </p>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -211,7 +230,7 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
           </div>
         )}
 
-        {displayBookings.length === 0 && !loading ? (
+        {bookingsToShow.length === 0 && !loading ? (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
             <Bus className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             {(searchDate || searchPhone) ? (
@@ -230,7 +249,7 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {displayBookings.map((booking) => (
+            {bookingsToShow.map((booking) => (
               <div key={booking.id || booking._id} className="bg-white rounded-xl shadow-lg p-6 relative">
                 {booking.isLocal && (
                   <div className="absolute top-2 right-2">
@@ -306,6 +325,18 @@ const HistoryPage = ({ bookingHistory, navigate }) => {
                 )}
               </div>
             ))}
+            
+            {/* Show More/Show Less Button */}
+            {displayBookings.length > 3 && !searchDate && !searchPhone && (
+              <div className="text-center pt-6">
+                <button
+                  onClick={() => setShowAllBookings(!showAllBookings)}
+                  className="bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  {showAllBookings ? 'Show Less' : `Show All (${displayBookings.length} bookings)`}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, AlertCircle } from 'lucide-react';
 
 
 const PassengerDetailsPage = ({ searchData, setSearchData, selectedBus, setSelectedBus, selectedSeats, setSelectedSeats, selectedBoardingPoint, setSelectedBoardingPoint, selectedDroppingPoint, setSelectedDroppingPoint, passengerDetails, setPassengerDetails, navigate }) => {
@@ -63,6 +63,21 @@ const PassengerDetailsPage = ({ searchData, setSearchData, selectedBus, setSelec
         return;
       }
     }
+
+    // Validate ladies seat gender restrictions
+    if (selectedBus && selectedSeats) {
+      for (let i = 0; i < selectedSeats.length; i++) {
+        const seatNumber = selectedSeats[i];
+        const seat = selectedBus.seats.find(s => s.number === seatNumber);
+        const passenger = passengerDetails[i];
+        
+        if (seat && seat.type === 'ladies' && passenger.gender !== 'female') {
+          alert(`Seat ${seatNumber} is a ladies seat and can only be booked by female passengers. Please change the gender for Passenger ${i + 1} or select a different seat.`);
+          return;
+        }
+      }
+    }
+
     localStorage.setItem('passengerDetails', JSON.stringify(passengerDetails));
     navigate('/payment');
   };
@@ -91,14 +106,32 @@ const PassengerDetailsPage = ({ searchData, setSearchData, selectedBus, setSelec
               {/* Multiple Passenger Forms */}
               {passengerDetails.map((passenger, index) => {
                 const seatNumber = selectedSeats[index];
+                const seat = selectedBus?.seats?.find(s => s.number === seatNumber);
+                const isLadiesSeat = seat && seat.type === 'ladies';
+                
                 return (
                   <div key={index} className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <User className="w-5 h-5 text-blue-600" />
-                      <h4 className="text-lg font-semibold text-gray-800">
-                        Passenger {index + 1} - Seat {seatNumber}
-                      </h4>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <User className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-lg font-semibold text-gray-800">
+                          Passenger {index + 1} - Seat {seatNumber}
+                        </h4>
+                      </div>
+                      {isLadiesSeat && (
+                        <span className="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full font-medium">
+                          Ladies Seat - Female Only
+                        </span>
+                      )}
                     </div>
+                    
+                    {isLadiesSeat && (
+                      <div className="mb-4 p-3 bg-pink-50 border border-pink-200 rounded-lg">
+                        <p className="text-sm text-pink-800">
+                          <strong>Important:</strong> This is a ladies seat and can only be booked by female passengers.
+                        </p>
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -146,11 +179,22 @@ const PassengerDetailsPage = ({ searchData, setSearchData, selectedBus, setSelec
                       </div>
                       
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Gender
+                          {seat.type === 'ladies' && (
+                            <span className="ml-2 px-2 py-1 bg-pink-100 text-pink-800 text-xs rounded-full">
+                              Ladies Seat - Female Only
+                            </span>
+                          )}
+                        </label>
                         <select 
                           value={passenger.gender} 
                           onChange={e => handlePassengerChange(index, 'gender', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent ${
+                            seat.type === 'ladies' && passenger.gender && passenger.gender !== 'female'
+                              ? 'border-red-300 focus:ring-red-500 bg-red-50'
+                              : 'border-gray-300 focus:ring-blue-500'
+                          }`}
                           required
                         >
                           <option value="">Select Gender</option>
@@ -158,6 +202,12 @@ const PassengerDetailsPage = ({ searchData, setSearchData, selectedBus, setSelec
                           <option value="female">Female</option>
                           <option value="other">Other</option>
                         </select>
+                        {seat.type === 'ladies' && passenger.gender && passenger.gender !== 'female' && (
+                          <p className="mt-1 text-sm text-red-600 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-1" />
+                            Ladies seats can only be booked by female passengers
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

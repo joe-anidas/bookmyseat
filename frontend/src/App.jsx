@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import HomePage from './components/HomePage';
 import BusResultsPage from './components/BusResultsPage';
 import SeatSelectionPage from './components/SeatSelectionPage';
@@ -12,6 +12,7 @@ import './App.css';
 
 const AppContent = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // State management
   const [searchData, setSearchData] = useState({
@@ -256,11 +257,12 @@ const AppContent = () => {
   
   return (
     <div className="font-sans">
-      <Routes>
+      <Routes location={location} key={location.pathname}>
         <Route 
           path="/" 
           element={
             <HomePage 
+              key="home"
               searchData={searchData}
               setSearchData={setSearchData}
               setAvailableBuses={setAvailableBuses}
@@ -276,6 +278,7 @@ const AppContent = () => {
           path="/results" 
           element={
             <BusResultsPage 
+              key="results"
               searchData={searchData}
               setSearchData={setSearchData}
               availableBuses={availableBuses}
@@ -374,6 +377,7 @@ const AppContent = () => {
           path="/history" 
           element={
             <HistoryPage 
+              key="history"
               bookingHistory={bookingHistory}
               navigate={navigate}
             />

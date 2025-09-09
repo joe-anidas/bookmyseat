@@ -205,7 +205,7 @@ app.post('/api/bookings', async (req, res) => {
 // GET route to fetch all bookings (for history)
 app.get('/api/bookings', async (req, res) => {
   try {
-    const { email, phone, bookingId } = req.query;
+    const { email, phone, bookingId, date } = req.query;
     
     let filter = {};
     
@@ -216,12 +216,17 @@ app.get('/api/bookings', async (req, res) => {
     
     // Filter by phone if provided
     if (phone) {
-      filter['passengers.phone'] = phone;
+      filter['passengers.phone'] = { $regex: phone, $options: 'i' };
     }
     
     // Filter by booking ID if provided
     if (bookingId) {
       filter.id = bookingId;
+    }
+
+    // Filter by date if provided
+    if (date) {
+      filter.date = date;
     }
 
     const bookings = await Booking.find(filter).sort({ createdAt: -1 });

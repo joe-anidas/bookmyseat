@@ -1,4 +1,4 @@
-# 🚌 Bus Ticket Booking System
+# 🚌 BookMySeat
 
 A full-stack web application for booking bus tickets with real-time seat selection, passenger management, and booking history. Built with React, Node.js, Express, and MongoDB.
 
@@ -111,7 +111,7 @@ npm run build      # Production build
 VITE_API_BASE_URL=http://localhost:5001
 VITE_API_VERSION=v1
 VITE_NODE_ENV=development
-VITE_APP_NAME=Bus Ticket Booking System
+VITE_APP_NAME=BookMySeat
 VITE_APP_VERSION=1.0.0
 ```
 

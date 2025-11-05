@@ -14,7 +14,7 @@ export const ENV_CONFIG = {
   API_BASE_URL,
   API_VERSION,
   NODE_ENV: import.meta.env.VITE_NODE_ENV || 'development',
-  APP_NAME: import.meta.env.VITE_APP_NAME || 'Bus Ticket Booking System',
+  APP_NAME: import.meta.env.VITE_APP_NAME || 'BookMySeat',
   APP_VERSION: import.meta.env.VITE_APP_VERSION || '1.0.0',
 };
 
